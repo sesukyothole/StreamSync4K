@@ -1,0 +1,6 @@
+{
+  "name": "StreamSync 4K",
+  "description": "Pemutar video streaming online minimalis dengan dukungan 4K, playlist M3U, dan sinkronisasi subtitle.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
