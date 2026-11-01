@@ -127,11 +127,13 @@ fun PlayerScreen(
                     player = playerManager.exoPlayer
                     useController = false
                     keepScreenOn = true
+                    setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
                     (videoSurfaceView as? android.view.SurfaceView)?.setZOrderMediaOverlay(true)
                 }
             },
             update = { playerView ->
                 playerView.player = playerManager.exoPlayer
+                playerView.setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
                 (playerView.videoSurfaceView as? android.view.SurfaceView)?.setZOrderMediaOverlay(true)
                 playerView.resizeMode = when (aspectRatioMode) {
                     AspectRatioMode.FIT -> AspectRatioFrameLayout.RESIZE_MODE_FIT

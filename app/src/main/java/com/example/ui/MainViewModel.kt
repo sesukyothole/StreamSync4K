@@ -144,6 +144,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _sortOrder.value = order
     }
 
+    val multiScreenCount: StateFlow<Int> = playerManager.multiScreenCount
+    val activeSlotIndex: StateFlow<Int> = playerManager.activeSlotIndex
+    val slotChannels: StateFlow<List<Channel?>> = playerManager.slotChannels
+
+    fun setMultiScreenCount(count: Int) {
+        playerManager.setMultiScreenCount(count)
+        // Masing-masing layar wajib dipilih oleh pengguna, tidak diisi otomatis berurutan
+        if (count > 1) {
+            _toastMessage.value = "Mode ${count} Layar: Ketuk layar untuk memilih saluran siaran"
+        }
+    }
+
+    fun setActiveSlot(index: Int) {
+        playerManager.setActiveSlot(index)
+        val ch = playerManager.slotChannels.value.getOrNull(index)
+        if (ch != null) {
+            _selectedPreviewChannel.value = ch
+        }
+    }
+
     fun playChannel(channel: Channel) {
         _selectedPreviewChannel.value = channel
         playerManager.playChannel(channel)
@@ -152,7 +172,38 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun selectChannelForPreview(channel: Channel) {
         _selectedPreviewChannel.value = channel
-        playerManager.playChannel(channel)
+        playerManager.playChannelInSlot(playerManager.activeSlotIndex.value, channel)
+    }
+
+    fun playChannelInSlot(slotIndex: Int, channel: Channel) {
+        if (slotIndex == playerManager.activeSlotIndex.value) {
+            _selectedPreviewChannel.value = channel
+        }
+        playerManager.playChannelInSlot(slotIndex, channel)
+    }
+
+    fun previousChannel(slotIndex: Int = playerManager.activeSlotIndex.value) {
+        val channels = currentChannels.value.ifEmpty { filteredChannels.value }
+        if (channels.isEmpty()) return
+        val currentCh = playerManager.slotChannels.value.getOrNull(slotIndex)
+            ?: if (slotIndex == 0) _selectedPreviewChannel.value else null
+        val currentIndex = channels.indexOfFirst { it.id == currentCh?.id }
+        val prevIndex = if (currentIndex <= 0) channels.size - 1 else currentIndex - 1
+        val targetChannel = channels[prevIndex]
+        playChannelInSlot(slotIndex, targetChannel)
+        _toastMessage.value = "Slot #${slotIndex + 1}: « ${targetChannel.name}"
+    }
+
+    fun nextChannel(slotIndex: Int = playerManager.activeSlotIndex.value) {
+        val channels = currentChannels.value.ifEmpty { filteredChannels.value }
+        if (channels.isEmpty()) return
+        val currentCh = playerManager.slotChannels.value.getOrNull(slotIndex)
+            ?: if (slotIndex == 0) _selectedPreviewChannel.value else null
+        val currentIndex = channels.indexOfFirst { it.id == currentCh?.id }
+        val nextIndex = if (currentIndex >= channels.size - 1 || currentIndex < 0) 0 else currentIndex + 1
+        val targetChannel = channels[nextIndex]
+        playChannelInSlot(slotIndex, targetChannel)
+        _toastMessage.value = "Slot #${slotIndex + 1}: » ${targetChannel.name}"
     }
 
     fun playChannelFullScreen(channel: Channel) {
